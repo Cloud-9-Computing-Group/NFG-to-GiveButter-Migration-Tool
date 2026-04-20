@@ -19,7 +19,7 @@ A complete, production-ready migration tool to transfer data from Network for Go
 - ✅ $0 transaction handling (auto-reclassified as "In Kind")
 - ✅ Fee calculation handling (donor-covered vs org-paid)
 - ✅ Campaign Title matching (flexible auto-match or create)
-- ✅ Comprehensive testing and validation (9 tests)
+- ✅ Comprehensive testing and validation (8 tests)
 - ✅ Complete documentation (5 primary docs)
 
 ---
@@ -49,7 +49,7 @@ A complete, production-ready migration tool to transfer data from Network for Go
 - ✅ **Donor-covered fees** require BOTH processing_fee AND fee_covered fields (validation rule)
 - ✅ **External Label** should be platform name + date, not transaction ID
 - ✅ **Duplicate transaction detection** works as documented - prevents re-import of same External ID + Label
-  - Error: "Duplicate transaction detected. A transaction with the same transaction external id (<id>) and label (<label>) already exists."
+  - Error: "Duplicate transaction detected. A transaction with the same transaction external id (`<id>`) and label (`<label>`) already exists."
   - Tested with all 5,331 transactions - 100% rejection rate on duplicate import attempt
 
 **Best Practice Note**:

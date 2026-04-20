@@ -227,7 +227,7 @@ Based on typical data (~2,853 contacts, ~15,000 transactions):
 - ✅ Standard text at 255 chars + Long text at 500+ chars in same record
 - ✅ **Duplicate transaction detection** - GiveButter prevents re-import of same External ID + Label
   - Tested with all 5,331 transactions - 100% rejection rate on duplicate import attempt
-  - Error format: "Duplicate transaction detected. A transaction with the same transaction external id (<id>) and label (<label>) already exists."
+  - Error format: "Duplicate transaction detected. A transaction with the same transaction external id (`<id>`) and label (`<label>`) already exists."
 
 ### **Known Limitations**:
 - ❌ Multiple addresses NOT supported by GiveButter (workaround: custom field)
