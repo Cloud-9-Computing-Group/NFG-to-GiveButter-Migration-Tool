@@ -13,6 +13,10 @@ param(
 $ErrorActionPreference = "Stop"
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 
+# Constants for field length limits
+$STANDARD_TEXT_LIMIT = 255
+$LONG_TEXT_SAFE_LIMIT = 1900
+
 # Create output and logs folders
 if (-not (Test-Path $OutputFolder)) {
     New-Item -ItemType Directory -Path $OutputFolder | Out-Null
@@ -351,8 +355,8 @@ $giveButterCompanies = foreach ($org in $orgContacts) {
         if ($org.'Point Of Contact Email' -ne '') { $pocParts += $org.'Point Of Contact Email' }
         if ($org.'Point Of Contact Phone' -ne '') { $pocParts += $org.'Point Of Contact Phone' }
         $nfg_poc_info = ($pocParts -join ', ')
-        if ($nfg_poc_info.Length -gt 255) {
-            $nfg_poc_info = $nfg_poc_info.Substring(0, 252) + '...'
+        if ($nfg_poc_info.Length -gt $STANDARD_TEXT_LIMIT) {
+            $nfg_poc_info = $nfg_poc_info.Substring(0, ($STANDARD_TEXT_LIMIT - 3)) + '...'
         }
     }
     
@@ -414,11 +418,13 @@ $giveButterCompanies = foreach ($org in $orgContacts) {
     $nfg_addresses_str = ($nfg_addresses -join ' | ')
     
     # Truncate if needed (long text fields support 2000+ chars, but be safe)
-    if ($nfg_alternate_contacts_str.Length -gt 1900) {
-        $nfg_alternate_contacts_str = $nfg_alternate_contacts_str.Substring(0, 1897) + '...'
+    if ($nfg_alternate_contacts_str.Length -gt $LONG_TEXT_SAFE_LIMIT) {
+        $nfg_alternate_contacts_str = $nfg_alternate_contacts_str.Substring(0, ($LONG_TEXT_SAFE_LIMIT - 3)) + '...'
+        $nfg_data_quality_flags += 'ALTERNATE_CONTACTS_TRUNCATED'
     }
-    if ($nfg_addresses_str.Length -gt 1900) {
-        $nfg_addresses_str = $nfg_addresses_str.Substring(0, 1897) + '...'
+    if ($nfg_addresses_str.Length -gt $LONG_TEXT_SAFE_LIMIT) {
+        $nfg_addresses_str = $nfg_addresses_str.Substring(0, ($LONG_TEXT_SAFE_LIMIT - 3)) + '...'
+        $nfg_data_quality_flags += 'ADDRESSES_TRUNCATED'
     }
     
     # Determine POC fields for import

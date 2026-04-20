@@ -61,6 +61,10 @@ if ($ExistingGiveButterMapping -ne "" -and (Test-Path $ExistingGiveButterMapping
 $ErrorActionPreference = "Stop"
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 
+# Constants for field length limits
+$STANDARD_TEXT_LIMIT = 255
+$LONG_TEXT_SAFE_LIMIT = 1900
+
 # Create output and logs folders
 if (-not (Test-Path $OutputFolder)) {
     New-Item -ItemType Directory -Path $OutputFolder | Out-Null
@@ -249,7 +253,11 @@ foreach ($nameGroup in $duplicateNameGroups) {
             # Sort by First Donation Date to determine primary (oldest donor)
             $sorted = $dupeGroup | Sort-Object { 
                 if ($_.'First Donation Date' -ne '') { 
-                    [DateTime]::Parse($_.'First Donation Date') 
+                    try {
+                        [DateTime]::ParseExact($_.'First Donation Date', @('M/d/yyyy', 'yyyy-MM-dd', 'MM/dd/yyyy'), [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None)
+                    } catch {
+                        [DateTime]::MaxValue
+                    }
                 } else { 
                     [DateTime]::MaxValue 
                 }
@@ -368,6 +376,12 @@ if ($AutoMergeDuplicates) {
     $stats.AutoMergedDuplicates = $mergeLookup.Count
 }
 
+# Build hashtable for efficient contact lookup by ID
+$contactsById = @{}
+foreach ($c in $individualContacts) {
+    $contactsById[$c.Id] = $c
+}
+
 # Process contacts
 $processedIDs = @{}
 $giveButterContacts = foreach ($contact in $individualContacts) {
@@ -382,11 +396,11 @@ $giveButterContacts = foreach ($contact in $individualContacts) {
     }
     $processedIDs[$contact.Id] = $true
     
-    # Find contacts to merge into this one (using optimized reverse lookup)
+    # Find contacts to merge into this one (using optimized hashtable lookup)
     $mergeContacts = @()
     if ($AutoMergeDuplicates -and $primaryToMergeIDs.ContainsKey($contact.Id)) {
         $mergeIDs = $primaryToMergeIDs[$contact.Id]
-        $mergeContacts = $individualContacts | Where-Object { $mergeIDs -contains $_.Id }
+        $mergeContacts = $mergeIDs | ForEach-Object { $contactsById[$_] } | Where-Object { $_ -ne $null }
     }
     
     # Initialize custom fields
@@ -430,6 +444,7 @@ $giveButterContacts = foreach ($contact in $individualContacts) {
         $nfg_combined_lifetime = [decimal]$lifetimeStr
     } catch {
         $nfg_combined_lifetime = 0
+        $nfg_data_quality_flags += 'INVALID_LIFETIME_VALUE'
     }
     
     # Process merged contacts
@@ -481,7 +496,7 @@ $giveButterContacts = foreach ($contact in $individualContacts) {
                 $lifetimeStr = $mergeContact.'Lifetime Donations' -replace '[\$,]', ''
                 $nfg_combined_lifetime += [decimal]$lifetimeStr
             } catch {
-                # Skip if can't parse
+                # Skip if can't parse (already flagged for primary contact if needed)
             }
         }
     }
@@ -517,8 +532,9 @@ $giveButterContacts = foreach ($contact in $individualContacts) {
     $nfg_addresses_str = ($nfg_addresses -join ' | ')
     
     # Truncate if needed (long text fields support 2000+ chars, but be safe)
-    if ($nfg_addresses_str.Length -gt 1900) {
-        $nfg_addresses_str = $nfg_addresses_str.Substring(0, 1897) + '...'
+    if ($nfg_addresses_str.Length -gt $LONG_TEXT_SAFE_LIMIT) {
+        $nfg_addresses_str = $nfg_addresses_str.Substring(0, ($LONG_TEXT_SAFE_LIMIT - 3)) + '...'
+        $nfg_data_quality_flags += 'ADDRESSES_TRUNCATED'
     }
     
     # Update stats (will update data quality flags count after address validation)
@@ -549,6 +565,7 @@ $giveButterContacts = foreach ($contact in $individualContacts) {
     }
     
     # Address validation: GiveButter requires ALL address fields or NONE
+    # Check BEFORE adding to custom field so we can mark incomplete addresses
     $addressLine1 = $contact.Address
     $addressLine2 = $contact.'Address 2'
     $city = $contact.City
@@ -563,7 +580,16 @@ $giveButterContacts = foreach ($contact in $individualContacts) {
     )
     
     if ($hasIncompleteAddress) {
-        # Clear ALL address fields (including Country Code) if any required field is missing
+        # Mark incomplete address in custom field, then clear for import
+        if ($nfg_addresses_str -ne '') {
+            # Update the last address entry (PRIMARY) to mark as incomplete
+            $addressParts = $nfg_addresses_str -split ' \| '
+            if ($addressParts[-1] -match '^PRIMARY:') {
+                $addressParts[-1] = 'INCOMPLETE: ' + $addressParts[-1]
+                $nfg_addresses_str = $addressParts -join ' | '
+            }
+        }
+        # Clear ALL address fields (including Country Code) for import
         $addressLine1 = ''
         $addressLine2 = ''
         $city = ''

@@ -6,13 +6,18 @@ param(
     [string]$TransactionFile = "N4G Transaction export.csv",
     [string]$IDLookupFile = "",  # From Phase 2 (unified lookup)
     [string]$OutputFolder = "output",
-    [string]$DefaultCampaignTitle = "General Donations"  # Default campaign if not mapped
+    [string]$DefaultCampaignTitle = "General Donations",  # Default campaign if not mapped
+    [switch]$SkipMappingUpdate  # Skip automatic mapping file update at end
 )
 
 $ErrorActionPreference = "Stop"
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $importDate = Get-Date -Format "yyyy-MM-dd"
 $externalLabel = "N4G $importDate"  # Customize with your organization name if desired
+
+# Constants for field length limits
+$STANDARD_TEXT_LIMIT = 255
+$LONG_TEXT_SAFE_LIMIT = 1900
 
 # Create logs folder
 if (-not (Test-Path $OutputFolder)) {
@@ -281,7 +286,7 @@ foreach ($txn in $transactions) {
 $zeroTransactions = $processedTransactions | Where-Object { [decimal]$_.Amount -eq 0 }
 
 # Check for Notes field length issues (GiveButter has 255 char limit on Internal Note field)
-$longNotes = $processedTransactions | Where-Object { $_.Notes.Length -gt 255 }
+$longNotes = $processedTransactions | Where-Object { $_.Notes.Length -gt $STANDARD_TEXT_LIMIT }
 
 # Save all transactions for import (including $0 as "In Kind")
 $outputFile = "$OutputFolder\GiveButter_Transactions_Import_$timestamp.csv"
@@ -298,8 +303,8 @@ if ($zeroTransactions.Count -gt 0) {
 
 # Warn about long notes (GiveButter has 255 char limit)
 if ($longNotes.Count -gt 0) {
-    Write-Host "`n⚠️  WARNING: $($longNotes.Count) transaction(s) have Notes > 255 characters" -ForegroundColor Yellow
-    Write-Host "  → GiveButter's 'Internal Note' field has a 255 character limit" -ForegroundColor Gray
+    Write-Host "`n⚠️  WARNING: $($longNotes.Count) transaction(s) have Notes > $STANDARD_TEXT_LIMIT characters" -ForegroundColor Yellow
+    Write-Host "  → GiveButter's 'Internal Note' field has a $STANDARD_TEXT_LIMIT character limit" -ForegroundColor Gray
     Write-Host "  → You may need to manually trim these during import" -ForegroundColor Gray
     Write-Host "  → Affected transactions:" -ForegroundColor Gray
     foreach ($txn in $longNotes) {
@@ -415,45 +420,32 @@ Write-Host "Summary saved to: $summaryFile" -ForegroundColor Green
 Write-Host "Log saved to: $logFile" -ForegroundColor Green
 Write-Host ""
 
-# Suggest updating mapping file for future imports
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "RECOMMENDED: Update Mapping File" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "To prevent duplicates on future imports, update the mapping file now:" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  .\Utility-CreateMappingFromGiveButter.ps1 -AutoFindLatest" -ForegroundColor White
-Write-Host ""
-Write-Host "This will:" -ForegroundColor Gray
-Write-Host "  - Backup your current mapping file to backup\" -ForegroundColor Gray
-Write-Host "  - Create fresh mapping from latest GiveButter exports" -ForegroundColor Gray
-Write-Host "  - Include all $($stats.Matched) imported contacts" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Run now? (Y/N - auto-skip in 10 seconds): " -ForegroundColor Yellow -NoNewline
-
-# Simple timeout using host.UI.RawUI.KeyAvailable
-$response = $null
-$timeoutSeconds = 10
-$startTime = Get-Date
-
-while (((Get-Date) - $startTime).TotalSeconds -lt $timeoutSeconds) {
-    if ([Console]::KeyAvailable) {
-        $response = Read-Host
-        break
-    }
-    Start-Sleep -Milliseconds 100
-}
-
-if ($null -eq $response) {
+# Auto-update mapping file for future imports (unless skipped)
+if (-not $SkipMappingUpdate) {
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "UPDATING MAPPING FILE" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "Auto-running mapping file update to prevent duplicates on future imports..." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "`nNo response - auto-running backup (timed out after 10 seconds)." -ForegroundColor Cyan
-    $response = 'Y'
-}
-
-if ($response -eq 'Y' -or $response -eq 'y') {
-    Write-Host "`nRunning utility script..." -ForegroundColor Cyan
+    Write-Host "This will:" -ForegroundColor Gray
+    Write-Host "  - Backup your current mapping file to backup\" -ForegroundColor Gray
+    Write-Host "  - Create fresh mapping from latest GiveButter exports" -ForegroundColor Gray
+    Write-Host "  - Include all $($stats.Matched) imported contacts" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Running: .\Utility-CreateMappingFromGiveButter.ps1 -AutoFindLatest" -ForegroundColor Cyan
+    Write-Host ""
+    
     & ".\Utility-CreateMappingFromGiveButter.ps1" -AutoFindLatest
-} elseif ($response -eq 'N' -or $response -eq 'n') {
-    Write-Host "`nSkipped. You can run it manually later." -ForegroundColor Gray
+    
+    Write-Host ""
+    Write-Host "Mapping file updated successfully!" -ForegroundColor Green
+    Write-Host "(Use -SkipMappingUpdate flag to skip this step in future runs)" -ForegroundColor Gray
+} else {
+    Write-Host "`n========================================" -ForegroundColor Cyan
+    Write-Host "MAPPING FILE UPDATE SKIPPED" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "To update mapping file manually, run:" -ForegroundColor Yellow
+    Write-Host "  .\Utility-CreateMappingFromGiveButter.ps1 -AutoFindLatest" -ForegroundColor White
 }
 
 Write-Host ""

@@ -10,6 +10,7 @@ param(
     [string]$OutputFolder = "output"
 )
 
+$ErrorActionPreference = "Stop"
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 
 # Create output folder if it doesn't exist

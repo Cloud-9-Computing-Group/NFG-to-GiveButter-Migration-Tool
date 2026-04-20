@@ -457,5 +457,19 @@ Write-Host "Summary saved to: $summaryFile" -ForegroundColor Green
 Write-Host "Log saved to: $logFile" -ForegroundColor Green
 Write-Host ""
 
+# Cleanup temporary _CLEANED.csv files
+Write-Host "Cleaning up temporary files..." -ForegroundColor Gray
+$cleanedFiles = @()
+if (Test-Path $cleanedContactsFile) { $cleanedFiles += $cleanedContactsFile }
+if ($cleanedCompaniesFile -ne "" -and (Test-Path $cleanedCompaniesFile)) { $cleanedFiles += $cleanedCompaniesFile }
+
+if ($cleanedFiles.Count -gt 0) {
+    foreach ($file in $cleanedFiles) {
+        Remove-Item $file -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "Removed $($cleanedFiles.Count) temporary _CLEANED.csv file(s)" -ForegroundColor Gray
+}
+Write-Host ""
+
 # Stop transcript logging
 Stop-Transcript
