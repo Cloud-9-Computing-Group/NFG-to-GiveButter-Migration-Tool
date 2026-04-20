@@ -19,14 +19,14 @@ A complete, production-ready migration tool to transfer data from Network for Go
 - ✅ $0 transaction handling (auto-reclassified as "In Kind")
 - ✅ Fee calculation handling (donor-covered vs org-paid)
 - ✅ Campaign Title matching (flexible auto-match or create)
-- ✅ Comprehensive testing and validation (8 tests)
+- ✅ Comprehensive testing and validation (9 tests)
 - ✅ Complete documentation (5 primary docs)
 
 ---
 
 ## 🧪 Testing Completed
 
-**8 comprehensive tests** run on April 15-19, 2026:
+**9 comprehensive tests** run on April 15-20, 2026:
 
 1. ✅ **Multiple Emails/Phones** - Confirmed 10+ supported, comma-separated
 2. ✅ **Long Text Limits** - Confirmed 2000+ chars, standard text 255 hard limit
@@ -36,6 +36,7 @@ A complete, production-ready migration tool to transfer data from Network for Go
 6. ✅ **Text Edge Case** - Confirmed 255 standard + 500+ long in same record works
 7. ✅ **Transaction Import** - Payment methods, $0 amounts, Campaign Title vs Code
 8. ✅ **Fee Handling** - Donor-covered fees require BOTH processing_fee AND fee_covered fields
+9. ✅ **Duplicate Transaction Detection** - Confirmed GiveButter prevents duplicate imports (tested April 20, 2026)
 
 **Key Discoveries**:
 - ❌ Multiple addresses NOT supported (workaround: custom field)
@@ -47,6 +48,12 @@ A complete, production-ready migration tool to transfer data from Network for Go
 - ✅ **Non-standard payment methods** mapped to "Other" with original type in Notes
 - ✅ **Donor-covered fees** require BOTH processing_fee AND fee_covered fields (validation rule)
 - ✅ **External Label** should be platform name + date, not transaction ID
+- ✅ **Duplicate transaction detection** works as documented - prevents re-import of same External ID + Label
+  - Error: "Duplicate transaction detected. A transaction with the same transaction external id (<id>) and label (<label>) already exists."
+  - Tested with all 5,331 transactions - 100% rejection rate on duplicate import attempt
+
+**Best Practice Note**:
+- 💡 **External ID Prefix**: For future migrations from other systems, consider prefixing External IDs (e.g., `N4G-<transaction_id>`) to prevent conflicts if another system uses the same transaction numbering scheme. Current implementation uses N4G transaction IDs directly, which works well for single-source migrations.
 
 All findings documented in `NOTES_TESTED_GIVEBUTTER_IMPORTS.md`
 

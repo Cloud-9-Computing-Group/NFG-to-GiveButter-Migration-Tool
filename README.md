@@ -1,7 +1,7 @@
 # Network for Good to GiveButter Migration Tool
 
-**Production Ready** ✅ | **Last Updated**: April 19, 2026  
-**Testing Completed**: April 15-16, 2026 | **Enhanced**: April 19, 2026
+**Production Ready** ✅ | **Last Updated**: April 20, 2026  
+**Testing Completed**: April 15-20, 2026 | **Enhanced**: April 19-20, 2026
 
 A comprehensive PowerShell-based migration tool to transfer contact and transaction data from Network for Good (N4G) to GiveButter, with full support for duplicate merging, multiple emails/phones, company POC linking, and 11 custom fields.
 
@@ -215,7 +215,7 @@ Based on typical data (~2,853 contacts, ~15,000 transactions):
 
 ## ✅ Testing & Validation
 
-**All import behaviors tested April 15-16, 2026**
+**All import behaviors tested April 15-20, 2026**
 
 ### **Confirmed Capabilities**:
 - ✅ Multiple emails (10+ supported, comma-separated)
@@ -225,11 +225,17 @@ Based on typical data (~2,853 contacts, ~15,000 transactions):
 - ✅ Upsert with Givebutter Contact ID
 - ✅ Date formats (both MM/DD/YYYY and YYYY-MM-DD accepted)
 - ✅ Standard text at 255 chars + Long text at 500+ chars in same record
+- ✅ **Duplicate transaction detection** - GiveButter prevents re-import of same External ID + Label
+  - Tested with all 5,331 transactions - 100% rejection rate on duplicate import attempt
+  - Error format: "Duplicate transaction detected. A transaction with the same transaction external id (<id>) and label (<label>) already exists."
 
 ### **Known Limitations**:
 - ❌ Multiple addresses NOT supported by GiveButter (workaround: custom field)
 - ⚠️ External ID alone doesn't upsert (must include Givebutter Contact ID)
 - ⚠️ Standard text hard limit: 255 characters (import fails if exceeded)
+
+### **Best Practice Note**:
+- 💡 **Transaction External ID Prefix**: For future migrations from other systems, consider prefixing External IDs (e.g., `N4G-<transaction_id>`) to prevent conflicts if another system uses the same transaction numbering scheme. Current implementation uses N4G transaction IDs directly, which works well for single-source migrations.
 
 📄 **See**: `NOTES_TESTED_GIVEBUTTER_IMPORTS.md` for complete testing results
 
