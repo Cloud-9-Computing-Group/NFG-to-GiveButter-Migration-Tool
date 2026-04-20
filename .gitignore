@@ -1,0 +1,95 @@
+# N4G to GiveButter Migration Tool - Git Ignore
+# Protects sensitive donor/transaction data from being committed
+
+# ===========================================
+# SENSITIVE DATA - NEVER COMMIT
+# ===========================================
+
+# Output files (contain processed donor data)
+/output/
+output/
+
+# Archive files (contain old test data)
+/archive/
+archive/
+
+# Backup files (contain mapping data with real contact IDs)
+/backup/
+backup/
+
+# Reference files (contain real donor/transaction exports from N4G and GiveButter)
+# Only include example/template files
+/reference files/*.csv
+!/reference files/*EXAMPLE*.csv
+!/reference files/*TEMPLATE*.csv
+
+# Mapping file (contains real GiveButter Contact IDs)
+existing_givebutter_mapping.csv
+
+# ===========================================
+# LOGS & TEMPORARY FILES
+# ===========================================
+
+# PowerShell transcripts
+*.txt
+!README.txt
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# ===========================================
+# SYSTEM FILES
+# ===========================================
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ===========================================
+# IDE & EDITOR FILES
+# ===========================================
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+
+# JetBrains
+.idea/
+
+# ===========================================
+# KEEP THESE FILES
+# ===========================================
+
+# Documentation (safe to commit)
+# *.md files are included by default
+
+# Scripts (safe to commit - no sensitive data)
+# *.ps1 files are included by default
+
+# Example files (safe to commit)
+# *EXAMPLE*.csv files are included (see above)
+
+# Custom fields documentation
+# CUSTOM_FIELDS_FINAL.md is included
+
+# ===========================================
+# NOTES
+# ===========================================
+# This .gitignore ensures:
+# 1. No real donor/transaction data is committed
+# 2. No GiveButter Contact IDs are exposed
+# 3. Only code, documentation, and examples are shared
+# 4. The repository remains safe for public sharing
