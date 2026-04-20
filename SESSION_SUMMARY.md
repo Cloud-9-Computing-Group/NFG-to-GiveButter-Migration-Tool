@@ -54,7 +54,7 @@ All findings documented in `NOTES_TESTED_GIVEBUTTER_IMPORTS.md`
 
 ## 📁 Production Files
 
-### **Scripts (6)**
+### **Scripts (5)**
 1. `Phase1A-PrepareIndividuals.ps1` (~715 lines)
    - Individual contact preparation
    - Duplicate merging with `-AutoMergeDuplicates` flag
@@ -85,18 +85,13 @@ All findings documented in `NOTES_TESTED_GIVEBUTTER_IMPORTS.md`
    - **Notes enhancement**: Donation Notes + Payment Description + merge info
    - Merged duplicate transaction handling
    - Fee calculation (validated 100% accurate)
-   - 10-second timeout on mapping update prompt (auto-runs if no response)
+   - **Auto-run mapping update**: Automatically updates mapping file after completion (use `-SkipMappingUpdate` to skip)
 
 5. `Utility-CreateMappingFromGiveButter.ps1` (~175 lines)
    - Auto-generates `existing_givebutter_mapping.csv` from GiveButter exports
    - Auto-finds latest exports with `-AutoFindLatest` flag
    - Automatic backup of existing mapping file
    - Prevents duplicate imports on re-runs
-
-6. `CleanupOldFiles.ps1` (~100 lines)
-   - Archives old test/duplicate files
-   - Keeps only latest production files
-   - Organizes reference files and output folders
 
 ### **Documentation (6)**
 1. `README.md` - Project overview and features
@@ -370,6 +365,17 @@ N4G to GiveButter/
 ---
 
 ## 🔄 April 19, 2026 Updates
+
+### **Code Review & Quality Improvements** ⭐ NEW
+- ✅ **Performance optimization**: Duplicate detection now O(n) instead of O(n²) using hashtable lookup
+- ✅ **Culture-invariant date parsing**: Handles multiple date formats reliably
+- ✅ **Address validation enhancement**: Incomplete addresses marked with "INCOMPLETE:" prefix in custom field
+- ✅ **Data quality flags**: Added `INVALID_LIFETIME_VALUE`, `ADDRESSES_TRUNCATED`, `ALTERNATE_CONTACTS_TRUNCATED`
+- ✅ **Constants extracted**: `$STANDARD_TEXT_LIMIT = 255`, `$LONG_TEXT_SAFE_LIMIT = 1900`
+- ✅ **Error handling**: Added `$ErrorActionPreference = "Stop"` to Phase1A-FixFailedRecords
+- ✅ **Phase 2 cleanup**: Automatic removal of temporary `_CLEANED.csv` files
+- ✅ **Phase 3 auto-run**: Mapping file update now runs automatically (use `-SkipMappingUpdate` to skip)
+- ✅ **CleanupOldFiles.ps1 removed**: Organization-specific script removed from repository
 
 ### **Phase 3 Transaction Enhancements**:
 - ✅ **Payment method mapping** with `ORIG PMT TYPE:` preservation

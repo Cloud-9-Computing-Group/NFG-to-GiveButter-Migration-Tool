@@ -7,6 +7,15 @@ A comprehensive PowerShell-based migration tool to transfer contact and transact
 
 ## 🆕 What's New (April 19, 2026)
 
+### **Code Review & Quality Improvements**
+- ✅ **Performance**: Optimized duplicate detection (O(n) instead of O(n²))
+- ✅ **Reliability**: Culture-invariant date parsing handles multiple formats
+- ✅ **Data Quality**: Incomplete addresses marked with "INCOMPLETE:" prefix
+- ✅ **Consistency**: Extracted constants for field limits (`$STANDARD_TEXT_LIMIT`, `$LONG_TEXT_SAFE_LIMIT`)
+- ✅ **Phase 3 Auto-Run**: Mapping file update now automatic (use `-SkipMappingUpdate` to skip)
+- ✅ **Cleanup**: Automatic removal of temporary `_CLEANED.csv` files in Phase 2
+
+### **Feature Enhancements**
 - ✅ **Phase 1B Enhancement**: Automatically loads converted orgs from Phase 1A OrgConversions file
 - ✅ **Phone & Address Validation**: Added to Phase 1B (matches Phase 1A behavior)
 - ✅ **Enhanced POC Matching**: Name → N4G ID → GiveButter ID lookup with merged duplicate support

@@ -269,7 +269,8 @@ Your source files are in `reference files/`:
     -TransactionFile "reference files\N4G Transaction export (...).csv" `
     -IDLookupFile "output\ID_Lookup_Unified_ForPhase3_*.csv" `
     -OutputFolder "output" `
-    -DefaultCampaignCode "General"
+    -DefaultCampaignTitle "General Donations"
+    # Add -SkipMappingUpdate to skip automatic mapping file update
 ```
 
 **What it does**:
@@ -284,6 +285,9 @@ Your source files are in `reference files/`:
 - ✅ Uses Campaign Title (not Code) for auto-matching or creation
 - ✅ Includes Donation Notes and Payment Description in transaction Notes
 - ✅ Creates GiveButter transaction import file
+- ✅ **Automatically updates mapping file** after completion (backs up current, regenerates from latest exports)
+  - Use `-SkipMappingUpdate` flag to skip this step
+  - Recommended to keep enabled for future imports
 
 **Output Files**:
 - `GiveButter_Transactions_Import_*.csv` ⭐ **Import this to GiveButter** (includes ALL transactions, even $0)
